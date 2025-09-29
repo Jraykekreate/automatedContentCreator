@@ -12,30 +12,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
-# ---- config ----
+# ---- defaults (can be overridden by function args) ----
 CHROMEDRIVER_PATH = "./chromedriver"
-SEARCH_QUERY = "chelsea vs benfica"
-SAVE_JSON = "balldata_2.json"
-# ----------------
+DEFAULT_SEARCH_QUERY = "chelsea vs benfica"
+DEFAULT_SAVE_JSON = "balldata_2.json"
+# ------------------------------------------------------
 
-service = Service(executable_path=CHROMEDRIVER_PATH)
-options = webdriver.ChromeOptions()
-options.add_argument("--start-maximized")
-# enable performance logging so we can read Network.requestWillBeSent entries
-options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-
-driver = webdriver.Chrome(service=service, options=options)
-
-# also enable network domain via CDP (helps in some chrome versions)
-try:
-    driver.execute_cdp_cmd("Network.enable", {})
-except Exception:
-    pass
 
 def human_type(element, text, min_delay=0.05, max_delay=0.18):
     for ch in text:
         element.send_keys(ch)
         time.sleep(random.uniform(min_delay, max_delay))
+
 
 def extract_match_id(text: str):
     """Try multiple patterns to find a FotMob match id number."""
@@ -52,6 +40,7 @@ def extract_match_id(text: str):
             return m.group(1)
     return None
 
+
 def clean_headers(raw_headers: dict):
     """Remove pseudo-headers (':method', ':authority', etc.) and ensure strings."""
     if not raw_headers:
@@ -60,172 +49,163 @@ def clean_headers(raw_headers: dict):
     for k, v in raw_headers.items():
         if isinstance(k, str) and k.startswith(":"):
             continue
-        # requests expects header values to be strings
         cleaned[str(k)] = str(v)
     return cleaned
 
-try:
-    # 1) go to FotMob and search
-    driver.get("https://fotmob.com")
-    input_element = WebDriverWait(driver, 15).until(
-        EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
-    )
-    human_type(input_element, SEARCH_QUERY)
-    input_element.send_keys(Keys.ENTER)
 
-    # 2) wait for the first result and capture its href BEFORE clicking
-    first_result = WebDriverWait(driver, 15).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "div.css-1vahj0u-MatchSearchItemCSS a"))
-    )
-    href_before = first_result.get_attribute("href")
-    print("href before click:", href_before)
+def scrape_match(
+    search_query: str = DEFAULT_SEARCH_QUERY,
+    chromedriver_path: str = CHROMEDRIVER_PATH,
+    save_json_path: str | None = None,
+) -> dict:
+    """Search for a match on FotMob, capture headers, fetch matchDetails, return JSON."""
+    service = Service(executable_path=chromedriver_path)
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    options.add_argument("--headless=new")
+    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    driver = webdriver.Chrome(service=service, options=options)
 
-    # clear performance logs so we only capture fresh network events for the click
     try:
-        _ = driver.get_log("performance")
-    except Exception:
-        pass
-
-    initial_handles = driver.window_handles.copy()
-    initial_url = driver.current_url
-
-    # 3) click
-    first_result.click()
-
-    # 4) wait for navigation/new tab or hash change
-    try:
-        WebDriverWait(driver, 12).until(
-            lambda d: len(d.window_handles) > len(initial_handles)
-                      or d.current_url != initial_url
-                      or (d.execute_script("return location.hash") or "") != ""
+        driver.get("https://fotmob.com")
+        input_element = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
         )
-    except TimeoutException:
-        # we'll try fallbacks below
-        pass
+        human_type(input_element, search_query)
+        input_element.send_keys(Keys.ENTER)
 
-    # if new tab opened, switch
-    if len(driver.window_handles) > len(initial_handles):
-        new_handle = [h for h in driver.window_handles if h not in initial_handles][0]
-        driver.switch_to.window(new_handle)
-        print("switched to new window/tab")
+        first_result = WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "div.css-1vahj0u-MatchSearchItemCSS a"))
+        )
+        href_before = first_result.get_attribute("href")
 
-    # ensure the page has time to settle (SPA rendering)
-    WebDriverWait(driver, 20).until(lambda d: d.execute_script("return document.readyState") == "complete")
-    # optionally wait for a page-specific selector to appear
-    try:
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#main-content")))
-    except TimeoutException:
-        pass
+        try:
+            _ = driver.get_log("performance")
+        except Exception:
+            pass
 
-    time.sleep(0.5)  # give client-side JS a small moment
+        initial_handles = driver.window_handles.copy()
+        initial_url = driver.current_url
+        first_result.click()
 
-    # 5) extract match id from hash/url/href
-    try:
-        location_hash = driver.execute_script("return location.hash") or ""
-    except WebDriverException:
-        location_hash = ""
-    current_url = driver.current_url
-    match_id = extract_match_id(location_hash) or extract_match_id(current_url) or extract_match_id(href_before)
+        try:
+            WebDriverWait(driver, 12).until(
+                lambda d: len(d.window_handles) > len(initial_handles)
+                          or d.current_url != initial_url
+                          or (d.execute_script("return location.hash") or "") != ""
+            )
+        except TimeoutException:
+            pass
 
-    # fallback: navigate directly and re-check
-    if not match_id and href_before:
-        print("fallback: navigating directly to href to get matchId")
-        driver.get(href_before)
-        WebDriverWait(driver, 15).until(lambda d: d.execute_script("return document.readyState") == "complete")
+        if len(driver.window_handles) > len(initial_handles):
+            new_handle = [h for h in driver.window_handles if h not in initial_handles][0]
+            driver.switch_to.window(new_handle)
+
+        WebDriverWait(driver, 20).until(lambda d: d.execute_script("return document.readyState") == "complete")
+        try:
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#main-content")))
+        except TimeoutException:
+            pass
+
+        time.sleep(0.5)
+
         try:
             location_hash = driver.execute_script("return location.hash") or ""
         except WebDriverException:
             location_hash = ""
         current_url = driver.current_url
-        match_id = extract_match_id(location_hash) or extract_match_id(current_url)
+        match_id = (
+            extract_match_id(location_hash)
+            or extract_match_id(current_url)
+            or extract_match_id(href_before)
+        )
 
-    if not match_id:
-        # final fallback: try to find numeric id in page source
-        page_src = driver.page_source
-        match_id = extract_match_id(page_src)
-
-    if not match_id:
-        raise ValueError(f"Could not determine matchId. Tried location.hash ({location_hash}), current_url ({current_url}), href ({href_before})")
-
-    print("extracted matchId:", match_id)
-    api_url = f"https://www.fotmob.com/api/data/matchDetails?matchId={match_id}"
-    print("target API URL:", api_url)
-
-    # 6) inspect performance logs for the actual request headers used by the browser for THAT API call
-    found_headers = None
-    deadline = time.time() + 20
-    checked_messages = set()
-    while time.time() < deadline and found_headers is None:
-        try:
-            logs = driver.get_log("performance")
-        except Exception:
-            logs = []
-        for entry in logs:
+        if not match_id and href_before:
+            driver.get(href_before)
+            WebDriverWait(driver, 15).until(lambda d: d.execute_script("return document.readyState") == "complete")
             try:
-                msg = json.loads(entry["message"])["message"]
+                location_hash = driver.execute_script("return location.hash") or ""
+            except WebDriverException:
+                location_hash = ""
+            current_url = driver.current_url
+            match_id = extract_match_id(location_hash) or extract_match_id(current_url)
+
+        if not match_id:
+            page_src = driver.page_source
+            match_id = extract_match_id(page_src)
+
+        if not match_id:
+            raise ValueError("Could not determine matchId")
+
+        api_url = f"https://www.fotmob.com/api/data/matchDetails?matchId={match_id}"
+
+        found_headers = None
+        deadline = time.time() + 20
+        checked_messages = set()
+        while time.time() < deadline and found_headers is None:
+            try:
+                logs = driver.get_log("performance")
             except Exception:
-                continue
-            # avoid reprocessing the same message
-            uid = json.dumps(msg, sort_keys=True)
-            if uid in checked_messages:
-                continue
-            checked_messages.add(uid)
+                logs = []
+            for entry in logs:
+                try:
+                    msg = json.loads(entry["message"])["message"]
+                except Exception:
+                    continue
+                uid = json.dumps(msg, sort_keys=True)
+                if uid in checked_messages:
+                    continue
+                checked_messages.add(uid)
 
-            # look for the network request event
-            if msg.get("method") == "Network.requestWillBeSent":
-                params = msg.get("params", {})
-                req = params.get("request", {})
-                url = req.get("url", "")
-                if "matchDetails" in url and str(match_id) in url:
-                    # found the browser request that matches our matchId
-                    found_headers = req.get("headers", {})
-                    print("found network request URL in logs:", url)
-                    break
-        if found_headers is None:
-            time.sleep(0.4)
+                if msg.get("method") == "Network.requestWillBeSent":
+                    params = msg.get("params", {})
+                    req = params.get("request", {})
+                    url = req.get("url", "")
+                    if "matchDetails" in url and str(match_id) in url:
+                        found_headers = req.get("headers", {})
+                        break
+            if found_headers is None:
+                time.sleep(0.4)
 
-    # 7) if we didn't capture headers, build a reasonable fallback (User-Agent, cookies, referer)
-    if not found_headers:
-        print("Warning: Unable to capture request headers from performance logs — using fallback headers.")
-        try:
-            ua = driver.execute_script("return navigator.userAgent")
-        except Exception:
-            ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        # build cookie string from browser cookies
-        cookies = driver.get_cookies()  # list of dicts
-        cookie_header = "; ".join(f"{c['name']}={c['value']}" for c in cookies) if cookies else ""
-        fallback = {
-            "User-Agent": ua,
-            "Accept": "application/json, text/plain, */*",
-            "Referer": current_url or "https://www.fotmob.com",
-        }
-        if cookie_header:
-            fallback["Cookie"] = cookie_header
-        request_headers = fallback
-    else:
-        request_headers = clean_headers(found_headers)
+        if not found_headers:
+            try:
+                ua = driver.execute_script("return navigator.userAgent")
+            except Exception:
+                ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            cookies = driver.get_cookies()
+            cookie_header = "; ".join(f"{c['name']}={c['value']}" for c in cookies) if cookies else ""
+            request_headers = {
+                "User-Agent": ua,
+                "Accept": "application/json, text/plain, */*",
+                "Referer": current_url or "https://www.fotmob.com",
+            }
+            if cookie_header:
+                request_headers["Cookie"] = cookie_header
+        else:
+            request_headers = clean_headers(found_headers)
 
-    # ensure we have a sensible User-Agent
-    if "User-Agent" not in request_headers:
-        try:
-            request_headers["User-Agent"] = driver.execute_script("return navigator.userAgent")
-        except Exception:
-            request_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        if "User-Agent" not in request_headers:
+            try:
+                request_headers["User-Agent"] = driver.execute_script("return navigator.userAgent")
+            except Exception:
+                request_headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
-    # 8) perform the API request using the captured headers
-    print("Request headers being used for the API call:")
-    for k, v in request_headers.items():
-        print(f"    {k}: {v}")
+        resp = requests.get(api_url, headers=request_headers, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
 
-    resp = requests.get(api_url, headers=request_headers, timeout=20)
-    resp.raise_for_status()
-    data = resp.json()
+        if save_json_path:
+            with open(save_json_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        return data
+    finally:
+        driver.quit()
 
-    # 9) save the JSON to disk
-    with open(SAVE_JSON, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Saved API response to {SAVE_JSON}")
-
-finally:
-    driver.quit()
+if __name__ == "__main__":
+    out = scrape_match(
+        search_query=DEFAULT_SEARCH_QUERY,
+        chromedriver_path=CHROMEDRIVER_PATH,
+        save_json_path=DEFAULT_SAVE_JSON,
+    )
+    print(json.dumps({"_summary": "saved", "hasTeams": bool(out.get("general")) if isinstance(out, dict) else None}, indent=2))
