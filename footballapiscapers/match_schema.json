@@ -1,0 +1,49 @@
+{
+  "general": {
+    "matchId": "String",
+    "matchName": "String",
+    "finished": "Boolean",
+    "homeTeam": { "name": "String", "id": "Number" },
+    "awayTeam": { "name": "String", "id": "Number" }
+  },
+  "header": {
+    "teams": "Array<Object>",
+    "status": {
+      "finished": "Boolean",
+      "scoreStr": "String"
+    },
+    "events": "Object | null"
+  },
+  "nav": "Array<String>",
+  "ongoing": "Boolean",
+  "hasPendingVAR": "Boolean",
+  "content": {
+    "matchFacts": {
+      "matchId": "Number",
+      "highlights": "Object | null",
+      "playerOfTheMatch": "Object",
+      "infoBox": "Object",
+      "teamForm": "Array<Array<Object>>",
+      "insights": "Array<Object>",
+      "topScorers": "Object"
+    },
+    "stats": "Object | null",
+    "playerStats": "Object | null",
+    "shotmap": "Object",
+    "weather": "Object",
+    "lineup": {
+      "lineupType": "String ('standard' or 'predicted')",
+      "homeTeam": "Object",
+      "awayTeam": "Object"
+    },
+    "table": "Object",
+    "h2h": "Object",
+    "momentum": "Object | Boolean"
+  },
+  "seo": {
+    "path": "String",
+    "eventJSONLD": "Object",
+    "breadcrumbJSONLD": "Array<Object>",
+    "faqJSONLD": "Object | null"
+  }
+}

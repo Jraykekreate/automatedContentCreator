@@ -1,0 +1,14 @@
+[project]
+name = "contentwork"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.14.2",
+    "instagrapi>=2.1.5",
+    "pillow>=11.3.0",
+    "requests>=2.32.5",
+    "selenium>=4.35.0",
+    "telethon>=1.41.2",
+]
