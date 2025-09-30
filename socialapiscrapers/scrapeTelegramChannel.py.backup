@@ -203,6 +203,7 @@ async def scrape_channel(
     do_login_and_print_string: bool,
 ):
     # If user asked only to create a login string session, do that and exit.
+      # If user asked only to create a login string session, do that and exit.
     if do_login_and_print_string:
         # Use an in-memory StringSession so we can export the session string
         from telethon.sessions import StringSession
@@ -296,15 +297,13 @@ async def scrape_channel(
         print("Use a user session with API_ID and API_HASH (create at https://my.telegram.org/apps) and login once.")
         print("\nDetailed error from Telethon:", e)
         await client.disconnect()
-        return []
+        return
     except KeyboardInterrupt:
         print("\nInterrupted by user. Stopping.")
-        await client.disconnect()
-        return []
     except Exception as e:
         print("Unexpected error while iterating messages:", repr(e))
         await client.disconnect()
-        return []
+        return
 
     # compute engagement and sort
     for p in posts:
@@ -351,9 +350,6 @@ async def scrape_channel(
         print(f"\nSaved aggregated JSON to {out_json}")
 
     await client.disconnect()
-    
-    # Return the posts data for API use
-    return posts
 
 
 # ---------- CLI ----------

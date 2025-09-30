@@ -2,10 +2,11 @@ from __future__ import annotations
 import os
 import asyncio
 from typing import Optional, List, Dict, Any
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import json
 
 # Load env at startup from absolute path
 load_dotenv("/home/xaje/Documents/contentWork/cred.env")
@@ -25,6 +26,7 @@ from socialapiscrapers.scrapeInstagramPage import (
 from footballapiscapers.league import scrape_league
 from footballapiscapers.match import scrape_match
 from footballapiscapers.player import scrape_player
+from imageAPIscrapers.gettyimage import scrape_image
 
 app = FastAPI(title="ContentWork API", version="0.1.0")
 
@@ -88,35 +90,33 @@ async def telegram_top(req: TelegramRequest):
         raise HTTPException(status_code=500, detail="Missing TELEGRAM_API_ID / TELEGRAM_API_HASH in env")
     api_id = int(api_id_env)
 
-    # Reuse optional sessions from env if provided inside the called function
-    out_json = req.out_json if req.out_json else ""
-    # Run scraper
-    posts_container: Dict[str, Any] = {"posts": []}
-
-    async def runner():
-        await tg_scrape_channel(
-            api_id=api_id,
-            api_hash=api_hash,
-            channel=req.channel,
-            days=req.days,
-            top_n=req.top,
-            out_jsonl="",  # do not write jsonl in API mode
-            out_json=out_json,
-            page_limit=100,
-            alpha=1.5,
-            beta=1.0,
-            delta=1.0,
-            gamma=2.0,
-            award_scale=1.0,
-            session_path=os.getenv("TELEGRAM_SESSION"),
-            string_session=os.getenv("TELEGRAM_STRING_SESSION"),
-            do_login_and_print_string=False,
-        )
-
-    # Execute and ignore prints; function writes file optionally. For API, we cannot intercept posts easily
-    # so we return status OK. To enrich response we'd need to adapt the module to return posts; keeping simple.
-    await runner()
-    return {"channel": req.channel, "ok": True, "saved": bool(out_json)}
+    # Run scraper and get posts data
+    posts = await tg_scrape_channel(
+        api_id=api_id,
+        api_hash=api_hash,
+        channel=req.channel,
+        days=req.days,
+        top_n=req.top,
+        out_jsonl="",  # do not write jsonl in API mode
+        out_json=req.out_json if req.out_json else "",
+        page_limit=100,
+        alpha=1.5,
+        beta=1.0,
+        delta=1.0,
+        gamma=2.0,
+        award_scale=1.0,
+        session_path=os.getenv("TELEGRAM_SESSION"),
+        string_session=os.getenv("TELEGRAM_STRING_SESSION"),
+        do_login_and_print_string=False,
+    )
+    
+    # Return the actual posts data
+    return {
+        "channel": req.channel, 
+        "top": posts[:req.top] if posts else [], 
+        "count": len(posts) if posts else 0,
+        "saved": bool(req.out_json)
+    }
 
 
 class InstagramRequest(BaseModel):
@@ -227,3 +227,18 @@ class FotmobPlayerRequest(BaseModel):
 def football_player(req: FotmobPlayerRequest):
     data = scrape_player(player_search_query=req.query, chromedriver_path="/home/xaje/Documents/contentWork/footballapiscapers/chromedriver", save_json_path=req.save_json)
     return data
+
+
+class ImageRequest(BaseModel):
+    query: str
+
+@app.post("/images/")
+def football_player(req: ImageRequest):
+    try:
+        result = scrape_image(
+            player_search_query=req.query,
+            chromedriver_path="/home/xaje/Documents/contentWork/footballapiscapers/chromedriver"
+        )
+        return JSONResponse(content=json.loads(result))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
