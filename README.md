@@ -6,7 +6,7 @@ Run the API locally:
 uv run uvicorn app.main:app --host 0.0.0.0 --port 9000
 ```
 
-Ensure `cred.env` is present at `/home/xaje/Documents/contentWork/cred.env` with required credentials. The app auto-loads it at startup.
+Ensure `cred.env` is present at `/contentWork/cred.env` with required credentials. The app auto-loads it at startup.
 
 Endpoints:
 - `GET /health` — health check
