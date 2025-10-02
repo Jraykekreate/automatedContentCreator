@@ -1,0 +1,813 @@
+{
+  "name": "contentCreationWorkflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Fetch the latest trending memes and football/sports news from the feeds. Based only on verified facts, generate 5 short content ideas that are:\n\n* Catchy and viral-ready for TikTok, Instagram, X, or YouTube Shorts\n* Relatable and tied to current meme formats or viral trends\n* 100% factual (no speculation beyond the feeds)\n* Snappy one-liners or captions (1–2 sentences)\n* Suitable for visual meme templates or quick image/video generation\n\nOutput 5 ideas as a numbered list.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a content strategist AI. Your task is to fetch the latest trending memes and football/sports news from the feeds. Based strictly on verified facts, you must generate 5 short content ideas that are: catchy, viral-ready, relatable to current meme formats, and 100% factual. Each idea should be a snappy one-liner or caption (1–2 sentences) and suitable for visual meme templates or quick image/video generation. Always output exactly 5 ideas as a numbered list.\n"
+        }
+      },
+      "id": "efa9fb9f-4b20-4e0f-a0cb-af33132556b8",
+      "name": "1. Generate Trendy Idea",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1792,
+        176
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        480
+      ],
+      "id": "359f95fe-6208-4e15-9aeb-04c5e0ed2735",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "vR0K89RNP8PChnFU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        448,
+        224
+      ],
+      "id": "20b3b703-d886-48f2-b993-789424d99953",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "toolDescription": "An HTTP endpoint that retrieves the most relevant football-related posts from Reddit to provide the LLM with context on current events in football.\n",
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/reddit",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "subreddit",
+              "value": "=soccer"
+            },
+            {
+              "name": "days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        1040
+      ],
+      "id": "90008b9d-bb51-4d6a-a2aa-23918048835f",
+      "name": "reddit Node"
+    },
+    {
+      "parameters": {
+        "toolDescription": "An HTTP endpoint that retrieves the most relevant football-related news from Telegram to provide the LLM with context on current news in football. It takes its data from sky sports football news\n",
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/telegram",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "Sky_sports_football_updates"
+            },
+            {
+              "name": "days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {},
+        "optimizeResponse": true
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1664,
+        880
+      ],
+      "id": "76119107-846a-487c-8da7-e92977b77442",
+      "name": "Sky sports Node"
+    },
+    {
+      "parameters": {
+        "toolDescription": "An HTTP Endpoint to get football banter and memes from telegram from the official troll football account useful in creating football jokes or funny football content",
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/telegram",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "troll_football_telegram"
+            },
+            {
+              "name": "days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        832
+      ],
+      "id": "67c6624a-f8ad-41bc-9993-8ee7bb48bccd",
+      "name": "Troll Football NOde"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"idea1\":\"idea_text_1\",\n  \"idea2\":\"idea_text_2\",\n  \"idea3\":\"idea_text_3\",\n  \"idea4\":\"idea_text_4\",\n  \"idea5\":\"idea_text_5\"\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        512
+      ],
+      "id": "6d3f2244-515c-46b6-905f-0801933a5443",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        1440
+      ],
+      "id": "5bc33fbb-788c-4511-b2de-22770ad2f226",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "vR0K89RNP8PChnFU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool provides data on any football match.\n\n* It is used for retrieving information about a specific game or overall match statistics.\n* It must only be called when the input is a football match title written entirely in lowercase (e.g., `chelsea vs brighton`).\n* Do not call the tool for any other type of input.\n",
+        "url": "http://host.docker.internal:9000/football/match/",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        752
+      ],
+      "id": "b2068b85-03e5-4be2-b72d-c178dd5ab5bf",
+      "name": "Football Match Node"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        352
+      ],
+      "id": "1c3fbb64-8ad8-45d4-b1c6-f40313f94ac1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/images",
+        "sendBody": true,
+        "contentType": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.output.query }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3568,
+        560
+      ],
+      "id": "2d5f5f07-3d79-4ce6-ae4d-231049d012e1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        720
+      ],
+      "id": "895ee568-78d2-4efe-b47b-efb8fc88c91a",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "vR0K89RNP8PChnFU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"query\":\"individual\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        848
+      ],
+      "id": "0da994f3-ca07-4459-808d-bde9677dee91",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3424,
+        1232
+      ],
+      "id": "88469c8f-a416-4de8-8ffc-051cfe8937e6",
+      "name": "Groq Chat Model4",
+      "credentials": {
+        "groqApi": {
+          "id": "vR0K89RNP8PChnFU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This script processes a list of input items.\n// For each item, it finds a string with a numbered list in the 'output' field.\n// It then replaces the entire item's JSON with a single key 'list' \n// whose value is the desired array of objects: [{ '0': 'value' }, ...].\n\n// Loop over all input items provided to the node.\nfor (const item of $input.all()) {\n  // Get the raw output string from the JSON of the current item.\n  const outputString = item.json.output;\n\n  // Initialize the final array.\n  let finalObjectList = [];\n\n  // Ensure the outputString exists and is a non-empty string before processing.\n  if (outputString && typeof outputString === 'string') {\n    // 1. Split, filter, and clean the list items.\n    const parsedStrings = outputString\n      .split('\\n')\n      .filter(line => line.trim() !== '')\n      .map(line => line.replace(/^\\d+\\.\\s*/, '').trim());\n\n    // 2. Transform the array of strings into the desired array of objects:\n    // [{ '0': 'first value' }, { '1': 'second value' }, ...]\n    finalObjectList = parsedStrings.map((value, index) => {\n      // Create an object where the key is the index (as a string)\n      // and the value is the parsed string.\n      const obj = {};\n      obj[String(index)] = value;\n      return obj;\n    });\n  }\n\n  // --- Final Transformation ---\n  // The requirement is to have a flat list of objects without 'final_list' or 'output'.\n  // We'll replace the item's JSON with a single object containing the list,\n  // using a key like 'list' to contain the array of objects.\n  // This achieves the most \"flat\" result for an item while keeping it valid.\n  item.json = {\n      list: finalObjectList\n  };\n}\n\n// Return all the modified items.\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        368
+      ],
+      "id": "e725daf0-b097-45c0-bf2d-256ff4a0cf23",
+      "name": "FilterIdeas"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_CHAT_ID_HERE",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "id": "df62b3ed-d2a1-4e0b-ae82-96406a41a742",
+      "name": "Send Processed Photo",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        8864,
+        1152
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "a15315e0-533e-4e2a-b683-30792032263a"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "id": "3de9a117-0adb-4d3d-8f2d-4ff78fd06118",
+      "name": "Convert Photo to Base",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        7808,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  const base64Url = item?.json?.data;\n  const url = `data:image/png;base64,${base64Url}`;\n  return { url };\n});\nreturn updatedItems;\n"
+      },
+      "id": "f843279b-c47f-4ce6-bddf-e2806f9f4e3a",
+      "name": "Format Image Data URL1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        8016,
+        1152
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3782b286-b6fd-4943-8530-ff922944b803",
+              "name": "base",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.images[0].image_url.url.split(',')[1] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "48cb9983-008d-4e67-a19f-5b80cd134a8b",
+      "name": "Parse AI Response Data1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        8416,
+        1152
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base",
+        "options": {}
+      },
+      "id": "1741fe16-2b3d-4734-8847-699ae587df97",
+      "name": "Base64 to Binary File1",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        8640,
+        1152
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer $OPENROUTER_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=",
+        "options": {}
+      },
+      "id": "edef46b0-e1c0-441f-917f-62629d560bb5",
+      "name": "Nano Banana Image Processor1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        8208,
+        1152
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "openRouterApi": {
+          "id": "CX9TfAf3MtY8ymlA",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4400,
+        320
+      ],
+      "id": "13b13589-d564-4120-8598-65338dcf9881",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"0\"] }} your output should be a simple concise and non-descriptive name of the person in the spotlight.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3152,
+        512
+      ],
+      "id": "fe791d40-6d94-41c0-8ec0-246371c418ca",
+      "name": "Agent To Get Image"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\n// separate text objects and image objects\nconst texts = input.filter(item => Object.keys(item.json)[0].match(/^\\d+$/));\nconst images = input.filter(item => item.json.image_url);\n\n// sort texts by their numeric key\ntexts.sort((a, b) => Number(Object.keys(a.json)[0]) - Number(Object.keys(b.json)[0]));\n\n// assign meme text to each image\nfor (let i = 0; i < images.length; i++) {\n  const textKey = Object.keys(texts[i].json)[0];\n  images[i].json.idea = texts[i].json[textKey];\n}\n\nreturn images;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4624,
+        448
+      ],
+      "id": "abde6518-2a2f-4aac-ab64-27fb751a3e89",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/generateImage/",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.idea }}"
+            },
+            {
+              "name": "=image_url",
+              "value": "={{ $json.image_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4832,
+        448
+      ],
+      "id": "f6a23fb4-094d-41ea-a04d-88cb30c9b53f",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {
+    "1. Generate Trendy Idea": [
+      {
+        "json": {
+          "output": "1. When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme.\n2. Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template.\n3. Manchester United fans begging for Xavi to “save the season” – pair it with the “Press F to pay respects” meme.\n4. Steven Gerrard bragging he’d still start at every top club – mash it with the “I’m the captain now” meme.\n5. Oliver Glasner staying chill about MU rumors while everyone’s panicking – ideal for the “This is fine” dog meme."
+        }
+      }
+    ],
+    "Split Out": [
+      {
+        "json": {
+          "0": "When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme."
+        }
+      },
+      {
+        "json": {
+          "1": "Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template."
+        }
+      }
+    ],
+    "Merge": [
+      {
+        "json": {
+          "0": "When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme."
+        }
+      },
+      {
+        "json": {
+          "1": "Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template."
+        }
+      },
+      {
+        "json": {
+          "query": "Ruben Amorim",
+          "image_url": "https://media.gettyimages.com/id/2235386198/photo/manchester-england-ruben-amorim-manager-of-manchester-united-reacts-during-the-premier-league.jpg?s=612x612&w=0&k=20&c=w4jhbgTrcWA45z9cECeC6WTbZsEHU2ze_usfSOTjfJU="
+        }
+      },
+      {
+        "json": {
+          "query": "Alex",
+          "image_url": "https://media.gettyimages.com/id/51047062/photo/brazilian-soccer-midfielder-alexsandro-de-souza-known-as-alex-heads-the-ball-10-july-2004.jpg?s=612x612&w=0&k=20&c=L6fuX3DoYmD-awg6jw9vrP6KZSQH4P_VtZ7Fn7jqX1I="
+        }
+      }
+    ]
+  },
+  "connections": {
+    "1. Generate Trendy Idea": {
+      "main": [
+        [
+          {
+            "node": "FilterIdeas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reddit Node": {
+      "ai_tool": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sky sports Node": {
+      "ai_tool": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Troll Football NOde": {
+      "ai_tool": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Football Match Node": {
+      "ai_tool": [
+        [
+          {
+            "node": "1. Generate Trendy Idea",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Agent To Get Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent To Get Image",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Agent To Get Image",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilterIdeas": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Photo to Base": {
+      "main": [
+        [
+          {
+            "node": "Format Image Data URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Image Data URL1": {
+      "main": [
+        [
+          {
+            "node": "Nano Banana Image Processor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response Data1": {
+      "main": [
+        [
+          {
+            "node": "Base64 to Binary File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base64 to Binary File1": {
+      "main": [
+        [
+          {
+            "node": "Send Processed Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana Image Processor1": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent To Get Image": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b9c78102-f5b8-43d9-b615-54d8ef4847fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89e07edb95cfabc4c8455c3dae8096d33235f8c36e9c50bdd2375b0c16526e91"
+  },
+  "id": "HFCLuKeefnU84tYJ",
+  "tags": []
+}

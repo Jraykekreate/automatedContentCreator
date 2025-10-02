@@ -1,9 +1,10 @@
 from __future__ import annotations
+from io import BytesIO
 import os
 import asyncio
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Response
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import json
@@ -12,6 +13,7 @@ import json
 load_dotenv("/home/xaje/Documents/contentWork/cred.env")
 
 # Import existing modules
+from imageGeneration.editImage import generate_image
 from socialapiscrapers.scrape_reddit import (
     get_oauth_token,
     fetch_subreddit_new,
@@ -240,5 +242,28 @@ def football_player(req: ImageRequest):
             chromedriver_path="/home/xaje/Documents/contentWork/footballapiscapers/chromedriver"
         )
         return JSONResponse(content=json.loads(result))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+class GenerateImageRequest(BaseModel):
+    query: str
+    image_url: str
+
+@app.post("/generateImage/")
+async def generate_image_endpoint(req: GenerateImageRequest):
+    try:
+        result = await asyncio.to_thread(generate_image, req.query, req.image_url)
+
+        if result.get("type") == "image":
+            buf = BytesIO(result["bytes"])
+            buf.seek(0)
+            return StreamingResponse(buf, media_type=result.get("mime", "image/png"))
+
+        if result.get("type") == "text":
+            return JSONResponse({"query": req.query, "text": result["text"]})
+
+        return JSONResponse({"query": req.query, "result": result})
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
