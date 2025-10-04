@@ -13,6 +13,7 @@ import json
 load_dotenv("/home/xaje/Documents/contentWork/cred.env")
 
 # Import existing modules
+from imageAPIscrapers.meme_imgflip import scrape_meme
 from imageGeneration.editImage import generate_image
 from socialapiscrapers.scrape_reddit import (
     get_oauth_token,
@@ -246,14 +247,28 @@ def football_player(req: ImageRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
+@app.post("/grabMeme/")
+async def grab_meme_endpoint(req: ImageRequest):
+    try:
+        result = scrape_meme(
+            memeQuery=req.query,
+            chromedriver_path="/home/xaje/Documents/contentWork/footballapiscapers/chromedriver"
+        )
+        return JSONResponse(content=json.loads(result))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    
+
 class GenerateImageRequest(BaseModel):
     query: str
+    promptImageURL: str
     image_url: str
 
 @app.post("/generateImage/")
 async def generate_image_endpoint(req: GenerateImageRequest):
     try:
-        result = await asyncio.to_thread(generate_image, req.query, req.image_url)
+        result = await asyncio.to_thread(generate_image, req.query, req.promptImageURL, req.image_url)
 
         if result.get("type") == "image":
             buf = BytesIO(result["bytes"])

@@ -4,27 +4,42 @@ from google import genai
 from PIL import Image
 from io import BytesIO
 import requests
+import asyncio
 
-# Initialize client (make sure GOOGLE_API_KEY is set in your env)
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
+from pydantic import BaseModel
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Initialize Gemini client (ensure GOOGLE_API_KEY is set in your env)
 client = genai.Client()
 
-def generate_image(prompt: str, image_url: str) -> Dict[str, Any]:
+
+def fetch_image_from_url(url: str) -> Image.Image:
+    """Fetch an image from a URL and return as PIL Image."""
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        raise RuntimeError(f"Failed to fetch image from {url} (status {resp.status_code})")
+    return Image.open(BytesIO(resp.content))
+
+
+def generate_image(prompt: str, prompt_image_url: str, image_url: str) -> Dict[str, Any]:
     """
-    Fetches image from URL and sends prompt + image to Gemini.
+    Fetches images and sends prompt + images to Gemini.
     Returns:
       - {"type": "image", "bytes": b"...", "mime": "image/png"} if an image is generated
       - {"type": "text", "text": "..."} if only text is returned
     """
-    # Fetch image bytes from the URL
-    resp = requests.get(image_url)
-    if resp.status_code != 200:
-        raise RuntimeError(f"Failed to fetch image from {image_url} (status {resp.status_code})")
-    pil_image = Image.open(BytesIO(resp.content))
+    # Fetch both images
+    base_image = fetch_image_from_url(image_url)
+    prompt_image = fetch_image_from_url(prompt_image_url)
 
-    # Call the Gemini model
+    # Send prompt + both images to Gemini
     response = client.models.generate_content(
         model="models/gemini-2.5-flash-image-preview",
-        contents=[prompt, pil_image],
+        contents=[prompt, prompt_image, base_image],
     )
 
     if not response.candidates:

@@ -4,10 +4,10 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "Fetch the latest trending memes and football/sports news from the feeds. Based only on verified facts, generate 5 short content ideas that are:\n\n* Catchy and viral-ready for TikTok, Instagram, X, or YouTube Shorts\n* Relatable and tied to current meme formats or viral trends\n* 100% factual (no speculation beyond the feeds)\n* Snappy one-liners or captions (1–2 sentences)\n* Suitable for visual meme templates or quick image/video generation\n\nOutput 5 ideas as a numbered list.\n",
+        "text": "Fetch the latest trending memes and football/sports news from the feeds. Based only on verified facts, generate 5 short content ideas that are:\n\n* Catchy and viral-ready for TikTok, Instagram, X, or YouTube Shorts\n* Relatable and tied to current meme formats or viral trends\n* 100% factual (no speculation beyond the feeds)\n* Snappy one-liners or captions (1–2 sentences)\n* Suitable for visual meme templates or quick image/video generation\n\nOutput 3 ideas as a numbered list.\nOnly use popular memes or well known memes in the ideas ",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are a content strategist AI. Your task is to fetch the latest trending memes and football/sports news from the feeds. Based strictly on verified facts, you must generate 5 short content ideas that are: catchy, viral-ready, relatable to current meme formats, and 100% factual. Each idea should be a snappy one-liner or caption (1–2 sentences) and suitable for visual meme templates or quick image/video generation. Always output exactly 5 ideas as a numbered list.\n"
+          "systemMessage": "You are a content strategist AI. Your task is to fetch the latest trending memes and football/sports news from the feeds. Based strictly on verified facts, you must generate 5 short content ideas that are: catchy, viral-ready, relatable to current meme formats, and 100% factual. The memes should be based on a template of memes that actually exist. Each idea should be a snappy one-liner or caption (1–2 sentences) and suitable for visual meme templates or quick image/video generation. Always output exactly 5 ideas as a numbered list.\n"
         }
       },
       "id": "efa9fb9f-4b20-4e0f-a0cb-af33132556b8",
@@ -27,8 +27,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        1056,
-        480
+        1040,
+        512
       ],
       "id": "359f95fe-6208-4e15-9aeb-04c5e0ed2735",
       "name": "Groq Chat Model",
@@ -65,6 +65,10 @@
             {
               "name": "days",
               "value": "1"
+            },
+            {
+              "name": "top",
+              "value": "5"
             }
           ]
         },
@@ -94,11 +98,14 @@
             {
               "name": "days",
               "value": "1"
+            },
+            {
+              "name": "top",
+              "value": "5"
             }
           ]
         },
-        "options": {},
-        "optimizeResponse": true
+        "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.2,
@@ -124,6 +131,10 @@
             {
               "name": "days",
               "value": "1"
+            },
+            {
+              "name": "top",
+              "value": "5"
             }
           ]
         },
@@ -141,7 +152,7 @@
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"idea1\":\"idea_text_1\",\n  \"idea2\":\"idea_text_2\",\n  \"idea3\":\"idea_text_3\",\n  \"idea4\":\"idea_text_4\",\n  \"idea5\":\"idea_text_5\"\n}\n",
+        "inputSchema": "={\n  \"1\": \"idea_text_1\",\n  \"2\": \"idea_text_2\",\n  \"3\": \"idea_text_3\",\n  \"4\": \"idea_text_4\",\n  \"5\": \"idea_text_5\"\n}\n",
         "autoFix": true
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
@@ -155,7 +166,7 @@
     },
     {
       "parameters": {
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-20b",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
@@ -199,20 +210,6 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "list",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        2960,
-        352
-      ],
-      "id": "1c3fbb64-8ad8-45d4-b1c6-f40313f94ac1",
-      "name": "Split Out"
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "http://host.docker.internal:9000/images",
         "sendBody": true,
@@ -230,7 +227,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3568,
+        3776,
         560
       ],
       "id": "2d5f5f07-3d79-4ce6-ae4d-231049d012e1",
@@ -244,8 +241,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        3024,
-        720
+        3184,
+        816
       ],
       "id": "895ee568-78d2-4efe-b47b-efb8fc88c91a",
       "name": "Groq Chat Model3",
@@ -264,7 +261,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        3248,
+        3456,
         848
       ],
       "id": "0da994f3-ca07-4459-808d-bde9677dee91",
@@ -278,7 +275,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        3424,
+        3632,
         1232
       ],
       "id": "88469c8f-a416-4de8-8ffc-051cfe8937e6",
@@ -289,19 +286,6 @@
           "name": "Groq account"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "// This script processes a list of input items.\n// For each item, it finds a string with a numbered list in the 'output' field.\n// It then replaces the entire item's JSON with a single key 'list' \n// whose value is the desired array of objects: [{ '0': 'value' }, ...].\n\n// Loop over all input items provided to the node.\nfor (const item of $input.all()) {\n  // Get the raw output string from the JSON of the current item.\n  const outputString = item.json.output;\n\n  // Initialize the final array.\n  let finalObjectList = [];\n\n  // Ensure the outputString exists and is a non-empty string before processing.\n  if (outputString && typeof outputString === 'string') {\n    // 1. Split, filter, and clean the list items.\n    const parsedStrings = outputString\n      .split('\\n')\n      .filter(line => line.trim() !== '')\n      .map(line => line.replace(/^\\d+\\.\\s*/, '').trim());\n\n    // 2. Transform the array of strings into the desired array of objects:\n    // [{ '0': 'first value' }, { '1': 'second value' }, ...]\n    finalObjectList = parsedStrings.map((value, index) => {\n      // Create an object where the key is the index (as a string)\n      // and the value is the parsed string.\n      const obj = {};\n      obj[String(index)] = value;\n      return obj;\n    });\n  }\n\n  // --- Final Transformation ---\n  // The requirement is to have a flat list of objects without 'final_list' or 'output'.\n  // We'll replace the item's JSON with a single object containing the list,\n  // using a key like 'list' to contain the array of objects.\n  // This achieves the most \"flat\" result for an item while keeping it valid.\n  item.json = {\n      list: finalObjectList\n  };\n}\n\n// Return all the modified items.\nreturn $input.all();"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2528,
-        368
-      ],
-      "id": "e725daf0-b097-45c0-bf2d-256ff4a0cf23",
-      "name": "FilterIdeas"
     },
     {
       "parameters": {
@@ -421,11 +405,13 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "numberInputs": 3
+      },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        4400,
+        4816,
         320
       ],
       "id": "13b13589-d564-4120-8598-65338dcf9881",
@@ -434,27 +420,27 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json[\"0\"] }} your output should be a simple concise and non-descriptive name of the person in the spotlight.\n",
+        "text": "=your output should be a simple concise and non-descriptive name of the person in the spotlight. {{ $json.text }}\n",
         "hasOutputParser": true,
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        3152,
-        512
+        3408,
+        640
       ],
       "id": "fe791d40-6d94-41c0-8ec0-246371c418ca",
       "name": "Agent To Get Image"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.all();\n\n// separate text objects and image objects\nconst texts = input.filter(item => Object.keys(item.json)[0].match(/^\\d+$/));\nconst images = input.filter(item => item.json.image_url);\n\n// sort texts by their numeric key\ntexts.sort((a, b) => Number(Object.keys(a.json)[0]) - Number(Object.keys(b.json)[0]));\n\n// assign meme text to each image\nfor (let i = 0; i < images.length; i++) {\n  const textKey = Object.keys(texts[i].json)[0];\n  images[i].json.idea = texts[i].json[textKey];\n}\n\nreturn images;\n"
+        "jsCode": "const input = $input.all();\n\n// collect text objects (single numeric key) and sort\nconst texts = input\n  .filter(item => {\n    const keys = Object.keys(item.json);\n    return keys.length === 1 && /^\\d+$/.test(keys[0]);\n  })\n  .sort((a, b) => Number(Object.keys(a.json)[0]) - Number(Object.keys(b.json)[0]));\n\n// collect getty image objects (keep original order) and treat \"undefined\"/empty as missing\nconst gettyImages = input\n  .map(item => item.json)\n  .filter(j => {\n    const q = j.gettyQuery;\n    const u = j.gettyImageUrl;\n    return (q && q !== 'undefined' && q !== '') || (u && u !== 'undefined' && u !== '');\n  });\n\n// collect meme image objects (treat \"undefined\"/empty as missing)\nconst memeImages = input\n  .map(item => item.json)\n  .filter(j => {\n    const q = j.memeQuery;\n    const u = j.memeImageUrl;\n    return q && q !== 'undefined' && q !== '' && u && u !== 'undefined' && u !== '';\n  });\n\n// Build output only for each text (no extra image-only objects).\n// Omit any grouped object that contains any null/undefined value.\nconst output = texts.map((textItem, i) => {\n  const textKey = Object.keys(textItem.json)[0];\n  const idea = textItem.json[textKey];\n\n  const g = gettyImages[i] || {};\n  const m = memeImages[i] || {};\n\n  return {\n    id: Number(textKey),\n    memeIdea: idea ?? null,\n    gettyQuery: g.gettyQuery ?? null,\n    gettyImageUrl: g.gettyImageUrl ?? null,\n    memeQuery: m.memeQuery ?? null,\n    memeImageUrl: m.memeImageUrl ?? null\n  };\n}).filter(obj => {\n  // keep only objects where no field is null or undefined\n  return Object.values(obj).every(v => v !== null && v !== undefined);\n});\n\nreturn output;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4624,
+        5040,
         448
       ],
       "id": "abde6518-2a2f-4aac-ab64-27fb751a3e89",
@@ -469,11 +455,15 @@
           "parameters": [
             {
               "name": "query",
-              "value": "={{ $json.idea }}"
+              "value": "=Edit the provided meme template with the specified character. Adapt it to fit the idea: `{{ $json.memeIdea }}`, ensuring the humor and style match the meme format and the character feels naturally integrated.\n"
             },
             {
-              "name": "=image_url",
-              "value": "={{ $json.image_url }}"
+              "name": "promptImageUrl",
+              "value": "={{ $json.memeImageUrl }}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $json.memeImageUrl }}"
             }
           ]
         },
@@ -482,58 +472,180 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        4832,
+        5680,
         448
       ],
       "id": "f6a23fb4-094d-41ea-a04d-88cb30c9b53f",
       "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Produce a single, lowercase web search query (2–4 words) that locates a popular meme template. Example: `drake yes no meme`. **DO NOT** add explanations, punctuation, code fences, examples beyond the one shown, extra words, or unrelated text. Only output the query. {{ $json.text }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3600,
+        -48
+      ],
+      "id": "2ddb3290-e1bb-4ab4-ab18-6bb894abcca8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        240
+      ],
+      "id": "31e727d9-3d40-47c0-8b68-d6f36eb00399",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "vR0K89RNP8PChnFU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:9000/grabMeme/",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4096,
+        -16
+      ],
+      "id": "77430f5d-3b36-41ef-9140-db902c398be8",
+      "name": "Find Meme",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "list",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        336
+      ],
+      "id": "52f79f01-04f2-4963-99b7-9b748604bc33",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "139f731d-735f-4a2b-81ae-4f9b1d257e68",
+              "name": "list",
+              "value": "={{ $json.list }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2784,
+        384
+      ],
+      "id": "75bbca0f-376c-4f9f-b5eb-bec6d54ea6cd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  // Accept the common places the data might live\n  const rawOutput = item.output ?? item.json?.output ?? item.json?.output_text ?? \"\";\n\n  // Normalize to a single string for parsing\n  const text = Array.isArray(rawOutput) ? rawOutput.join(\"\\n\") : String(rawOutput || \"\");\n\n  // Regex: capture blocks that start with a number (1. or 1) ) and grab everything until the next numbered item or EOF\n  const regex = /(\\d+)[\\.\\)]\\s*([\\s\\S]*?)(?=(?:\\n\\s*\\d+[\\.\\)]\\s)|$)/gs;\n\n  let finalList = [];\n  let match;\n  while ((match = regex.exec(text)) !== null) {\n    const number = match[1];\n    const content = match[2].trim().replace(/\\s+/g, \" \"); // collapse internal whitespace\n    finalList.push({ [number]: content });\n  }\n\n  // Fallback: if nothing matched, try line-by-line \"N. text\" or keep whole output as item \"1\"\n  if (finalList.length === 0) {\n    const lineRegex = /^\\s*(\\d+)[\\.\\)]\\s*(.+)$/;\n    const lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(Boolean);\n    for (const l of lines) {\n      const m = l.match(lineRegex);\n      if (m) finalList.push({ [m[1]]: m[2].trim() });\n    }\n    if (finalList.length === 0 && text.trim()) {\n      finalList = [{ \"1\": text.trim() }];\n    }\n  }\n\n  // Replace the item's JSON with the wrapped list\n  item.json = { list: finalList };\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2432,
+        368
+      ],
+      "id": "e725daf0-b097-45c0-bf2d-256ff4a0cf23",
+      "name": "FilterIdeas"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"gettyQuery\": \"{{ $json.query }}\",\n  \"gettyImageUrl\": \"{{ $json.image_url }}\"\n}\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3984,
+        560
+      ],
+      "id": "1751b2a1-e7de-4369-abdb-ebc01317a15e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"memeQuery\": \"{{ $json.query }}\",\n  \"memeImageUrl\": \"{{ $json.image_url }}\"\n}\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        96
+      ],
+      "id": "3f82f29b-5ba5-4f3c-b292-be7d080f81d7",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and replace numbered key with \"text\"\nfor (const item of $input.all()) {\n  const keys = Object.keys(item.json);\n  if (keys.length > 0) {\n    const oldKey = keys[0]; // \"1\", \"2\", etc.\n    const value = item.json[oldKey];\n    \n    // Remove the old key and replace with \"text\"\n    item.json = { text: value };\n  }\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        96
+      ],
+      "id": "2bf411bb-5507-469d-99ae-96f89b5bebd0",
+      "name": "Remap Keys"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and replace numbered key with \"text\"\nfor (const item of $input.all()) {\n  const keys = Object.keys(item.json);\n  if (keys.length > 0) {\n    const oldKey = keys[0]; // \"1\", \"2\", etc.\n    const value = item.json[oldKey];\n    \n    // Remove the old key and replace with \"text\"\n    item.json = { text: value };\n  }\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3184,
+        624
+      ],
+      "id": "5c3e6c6b-36df-4837-8f71-c751195dbf82",
+      "name": "Rename Key"
     }
   ],
-  "pinData": {
-    "1. Generate Trendy Idea": [
-      {
-        "json": {
-          "output": "1. When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme.\n2. Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template.\n3. Manchester United fans begging for Xavi to “save the season” – pair it with the “Press F to pay respects” meme.\n4. Steven Gerrard bragging he’d still start at every top club – mash it with the “I’m the captain now” meme.\n5. Oliver Glasner staying chill about MU rumors while everyone’s panicking – ideal for the “This is fine” dog meme."
-        }
-      }
-    ],
-    "Split Out": [
-      {
-        "json": {
-          "0": "When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme."
-        }
-      },
-      {
-        "json": {
-          "1": "Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template."
-        }
-      }
-    ],
-    "Merge": [
-      {
-        "json": {
-          "0": "When Ruben Amorim gets told to switch to a 4‑3‑3 and his face says “I’m speechless” – perfect for the classic “No one: …” meme."
-        }
-      },
-      {
-        "json": {
-          "1": "Chelsea’s board betting on Enzo Maresca to finally stop the red‑card spree – cue the “I’m not a magician, but…” template."
-        }
-      },
-      {
-        "json": {
-          "query": "Ruben Amorim",
-          "image_url": "https://media.gettyimages.com/id/2235386198/photo/manchester-england-ruben-amorim-manager-of-manchester-united-reacts-during-the-premier-league.jpg?s=612x612&w=0&k=20&c=w4jhbgTrcWA45z9cECeC6WTbZsEHU2ze_usfSOTjfJU="
-        }
-      },
-      {
-        "json": {
-          "query": "Alex",
-          "image_url": "https://media.gettyimages.com/id/51047062/photo/brazilian-soccer-midfielder-alexsandro-de-souza-known-as-alex-heads-the-ball-10-july-2004.jpg?s=612x612&w=0&k=20&c=L6fuX3DoYmD-awg6jw9vrP6KZSQH4P_VtZ7Fn7jqX1I="
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "1. Generate Trendy Idea": {
       "main": [
@@ -634,29 +746,13 @@
         ]
       ]
     },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Agent To Get Image",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "HTTP Request": {
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Edit Fields1",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -689,17 +785,6 @@
           {
             "node": "Structured Output Parser1",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "FilterIdeas": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
             "index": 0
           }
         ]
@@ -797,13 +882,133 @@
       "main": [
         []
       ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Find Meme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Meme": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Rename Key",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Remap Keys",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilterIdeas": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Remap Keys": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename Key": {
+      "main": [
+        [
+          {
+            "node": "Agent To Get Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "b9c78102-f5b8-43d9-b615-54d8ef4847fc",
+  "versionId": "9279af49-512c-4f19-bd4d-4fc890fb4920",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "89e07edb95cfabc4c8455c3dae8096d33235f8c36e9c50bdd2375b0c16526e91"
